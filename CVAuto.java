@@ -29,10 +29,10 @@ public class CVAuto extends LinearOpMode {
     DcMotor rearRight;
     DcMotor launcherLeft;
     DcMotor launcherRight;
-    Servo launcherServo;
-    Servo armServo;
-    Servo clawServo;
+    Servo launcherArm;
     Servo pusherServo;
+    Servo wobbleArm;
+    Servo wobbleGrip;
     OpenCvCamera webcam;
     EasyOpenCVExample.SkystoneDeterminationPipeline pipeline;
 
@@ -51,13 +51,14 @@ public class CVAuto extends LinearOpMode {
         launcherLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         pusherServo = hardwareMap.servo.get("pusherServo");
-        launcherServo = hardwareMap.servo.get("launcherArm");
-        armServo = hardwareMap.servo.get("armServo");
-        clawServo = hardwareMap.servo.get("clawServo");
+        launcherArm = hardwareMap.servo.get("launcherArm");
+        wobbleArm = hardwareMap.servo.get("wobbleArm");
+        wobbleGrip = hardwareMap.servo.get("wobbleGrip");
 
-        launcherServo.setPosition(0.075);
-        armServo.setPosition(0);
-        clawServo.setPosition(0);
+        launcherArm.setPosition(0.085);
+        wobbleGrip.setPosition(0);
+        sleep(250);
+        wobbleArm.setPosition(0.75);
         pusherServo.setPosition(0);
 
         //OpenCV and webcam initialization
@@ -85,27 +86,26 @@ public class CVAuto extends LinearOpMode {
             sleep(20);
         }
 
-        MecanumMovement move = new MecanumMovement(0,0,0); // Initialize mecanum drivetrain calculator
 
         sleep(100);
 
         int ringAnalysis = pipeline.getAnalysis();
 
-        char SCENARIO = ' ';
+        char scenario = ' ';
         if(ringAnalysis >= 142){
-            SCENARIO = 'C';
+            scenario = 'C';
         }
         else if(ringAnalysis >= 135){
-            SCENARIO = 'B';
+            scenario = 'B';
         }
         else{
-            SCENARIO = 'A';
+            scenario = 'A';
         }
 
         launcherLeft.setPower(1);
         launcherRight.setPower(1);
 
-        moveDrivetrain(0.5, 0, -0.15, 250);
+        moveDrivetrain(0, 0.5, -0.25, 250);
 
         sleep(500);
         pusherServo.setPosition(1);
@@ -114,42 +114,45 @@ public class CVAuto extends LinearOpMode {
         launcherRight.setPower(0);
         pusherServo.setPosition(0);
 
-        moveDrivetrain(0.5, 0, 0.17, 275);
+        moveDrivetrain(0, 0.5, 0.17, 275);
 
-        moveDrivetrain(0.75, -0.1, 0.05, 1000);
+        moveDrivetrain(-0.1, 0.6, 0.08, 1000);
 
         sleep(1000);
 
-        if(SCENARIO == 'A'){
-            move.setMovement(0,0,1);
-            setDrivetrain(move);
-            sleep(250);
+        if(scenario == 'A'){
+            moveDrivetrain(0.4,0,0,500);
+            //Release wobble goal
+            sleep(400);
+            wobbleArm.setPosition(0.2);
+            sleep(1000);
+            wobbleGrip.setPosition(1);
+        }
+        else if(scenario == 'B'){
+            moveDrivetrain(-0.25,0.25,0,500);
+            sleep(400);
+            wobbleArm.setPosition(0.2);
+            sleep((1000));
+            wobbleGrip.setPosition(1);
             //Release wobble goal
         }
-        else if(SCENARIO == 'B'){
-            move.setMovement(0,0,-1);
-            setDrivetrain(move);
-            sleep(250);
-        }
-        else if(SCENARIO == 'C'){
-            move.setMovement(-.25,0,0);
-            setDrivetrain(move);
-            sleep(500);
+        else if(scenario == 'C'){
+            moveDrivetrain(.4,1,0,750);
+            sleep(400);
+            wobbleArm.setPosition(0.2);
+            sleep(1000);
+            wobbleGrip.setPosition(1);
         }
 
     }
 
     /**
-     * Actually sets the motors from a given movement
-     * @param move
+     * Sets drive train to move in x, y, and rx, for time seconds and then stops
+     * @param x
+     * @param y
+     * @param rx
+     * @param time
      */
-    public void setDrivetrain(MecanumMovement move){
-        frontLeft.setPower(move.getFrontLeft());
-        rearLeft.setPower(move.getRearLeft());
-        frontRight.setPower(move.getFrontRight());
-        rearRight.setPower(move.getRearRight());
-    }
-
     public void moveDrivetrain(double x, double y, double rx, int time){
         frontLeft.setPower(y + x + rx);
         rearLeft.setPower(y - x + rx);
@@ -160,7 +163,7 @@ public class CVAuto extends LinearOpMode {
     }
 
     /**
-     * Stops all drivetrain motors
+     * Stops all drive train motors
      */
     public void stopDrivetrain(){
         frontLeft.setPower(0);
@@ -169,10 +172,6 @@ public class CVAuto extends LinearOpMode {
         rearRight.setPower(0);
     }
 
-    /**
-     * OpenCV stuff should be in its own class but it is not cooperating
-     * and I do not have enough time to figure out why but it works anyways.
-     */
     public static class SkystoneDeterminationPipeline extends OpenCvPipeline {
 
         public enum RingPosition {
