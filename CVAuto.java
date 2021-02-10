@@ -55,7 +55,7 @@ public class CVAuto extends LinearOpMode {
         wobbleArm = hardwareMap.servo.get("wobbleArm");
         wobbleGrip = hardwareMap.servo.get("wobbleGrip");
 
-        launcherArm.setPosition(0.085);
+        launcherArm.setPosition(0.075);
         wobbleGrip.setPosition(0);
         sleep(250);
         wobbleArm.setPosition(0.75);
@@ -71,7 +71,7 @@ public class CVAuto extends LinearOpMode {
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(1280, 720, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(1280, 720, OpenCvCameraRotation.UPSIDE_DOWN);
             }
         });
 
@@ -92,10 +92,10 @@ public class CVAuto extends LinearOpMode {
         int ringAnalysis = pipeline.getAnalysis();
 
         char scenario = ' ';
-        if(ringAnalysis >= 142){
+        if(ringAnalysis >= 165){
             scenario = 'C';
         }
-        else if(ringAnalysis >= 135){
+        else if(ringAnalysis >= 150){
             scenario = 'B';
         }
         else{
@@ -129,7 +129,7 @@ public class CVAuto extends LinearOpMode {
             wobbleGrip.setPosition(1);
         }
         else if(scenario == 'B'){
-            moveDrivetrain(-0.25,0.25,0,500);
+            moveDrivetrain(-0.75,0.75,0,750);
             sleep(400);
             wobbleArm.setPosition(0.2);
             sleep((1000));
@@ -137,7 +137,7 @@ public class CVAuto extends LinearOpMode {
             //Release wobble goal
         }
         else if(scenario == 'C'){
-            moveDrivetrain(.4,1,0,750);
+            moveDrivetrain(.4,1,-.1,750);
             sleep(400);
             wobbleArm.setPosition(0.2);
             sleep(1000);
